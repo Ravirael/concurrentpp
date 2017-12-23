@@ -17,7 +17,6 @@ namespace concurrent {
         std::condition_variable &m_queue_not_empty;
         std::condition_variable &m_queue_empty;
         std::atomic_bool m_stopped{true};
-        std::atomic_bool m_executing_task{false};
         std::thread m_thread;
 
     public:
@@ -53,10 +52,6 @@ namespace concurrent {
             }
         }
 
-        bool executing_task() const {
-            return m_executing_task;
-        }
-
         bool running() const {
             return !m_stopped;
         }
@@ -66,6 +61,12 @@ namespace concurrent {
         }
 
         ~worker() {
+            // fallback stopping, usually should be stopped before destructor
+            if (running()) {
+                stop();
+                m_queue_not_empty.notify_all();
+            }
+
             if (m_thread.joinable()) {
                 m_thread.join();
             }
@@ -73,9 +74,8 @@ namespace concurrent {
 
     private:
         void consume_and_execute() {
-            std::unique_lock<mutex_type> lock(m_mutex, std::defer_lock);
             while (true) {
-                lock.lock();
+                std::unique_lock<mutex_type> lock(m_mutex);
                 m_queue_not_empty.wait(lock, [this]{ return !m_task_queue.empty() || m_stopped; });
 
                 if (m_stopped) {
@@ -84,14 +84,14 @@ namespace concurrent {
 
                 auto task = m_task_queue.pop();
 
-                if (m_task_queue.empty()) {
+                const bool notify_empty =  m_task_queue.empty();
+                lock.unlock();
+
+                if (notify_empty) {
                     m_queue_empty.notify_one();
                 }
 
-                lock.unlock();
-                m_executing_task = true;
                 task();
-                m_executing_task = false;
             }
         }
     };
