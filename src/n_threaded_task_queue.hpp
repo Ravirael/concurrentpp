@@ -5,12 +5,13 @@
 #include "workers_pool.hpp"
 
 namespace concurrent {
-    template <class Mutex, class Queue>
-    class fixed_size_thread_pool {
+    template <class Mutex, class Queue, class Thread>
+    class n_threaded_task_queue {
     public:
         using mutex_type = Mutex;
         using queue_type = Queue;
-        using worker_type = concurrent::worker<queue_type, mutex_type>;
+        using thread_type = Thread;
+        using worker_type = concurrent::worker<queue_type, mutex_type, thread_type>;
         using pushed_value_type = typename Queue::pushed_value_type;
 
     private:
@@ -21,14 +22,14 @@ namespace concurrent {
         concurrent::workers_vector<worker_type> m_workers;
 
     public:
-        explicit fixed_size_thread_pool(std::size_t pool_size = std::thread::hardware_concurrency()):
+        explicit n_threaded_task_queue(std::size_t number_of_threads = std::thread::hardware_concurrency()):
                 m_task_queue(),
                 m_queue_mutex(),
                 m_queue_not_empty(),
                 m_workers() {
-            m_workers.reserve(pool_size);
+            m_workers.reserve(number_of_threads);
 
-            for (std::size_t i = 0; i < pool_size; ++ i) {
+            for (std::size_t i = 0; i < number_of_threads; ++ i) {
                 m_workers.emplace_back(m_task_queue, m_queue_mutex, m_queue_not_empty, m_queue_empty);
             }
 
@@ -70,11 +71,7 @@ namespace concurrent {
             m_task_queue.clear();
         }
 
-        std::size_t currently_executed_tasks() const {
-            return m_workers.currently_executed_tasks();
-        }
-
-        ~fixed_size_thread_pool() {
+        ~n_threaded_task_queue() {
             wait_until_task_queue_is_empty();
             m_workers.stop();
 

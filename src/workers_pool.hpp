@@ -70,16 +70,6 @@ namespace concurrent {
             }
         }
 
-        size_type currently_executed_tasks() const {
-            return std::accumulate(
-                    begin(),
-                    end(),
-                    size_type(0u),
-                    [](size_type accumulator, const worker_type &worker) {
-                        return accumulator + worker.executing_task();
-                    }
-            );
-        }
     };
 
     template < class T >

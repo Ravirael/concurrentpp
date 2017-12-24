@@ -5,11 +5,12 @@
 #include <thread>
 
 namespace concurrent {
-    template<class Queue, class Mutex>
+    template<class Queue, class Mutex, class Thread = std::thread>
     class worker {
     public:
         using mutex_type = Mutex;
         using queue_type = Queue;
+        using thread_type = Thread;
 
     private:
         queue_type &m_task_queue;
@@ -17,7 +18,7 @@ namespace concurrent {
         std::condition_variable &m_queue_not_empty;
         std::condition_variable &m_queue_empty;
         std::atomic_bool m_stopped{true};
-        std::thread m_thread;
+        thread_type m_thread;
 
     public:
         worker(

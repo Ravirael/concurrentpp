@@ -2,6 +2,7 @@
 #include <worker.hpp>
 #include <unsafe_fifo_queue.hpp>
 #include <functional>
+#include "spy_thread.h"
 
 
 SCENARIO("worker can be started and stopped", "[concurrent::worker]") {
@@ -11,7 +12,7 @@ SCENARIO("worker can be started and stopped", "[concurrent::worker]") {
         std::condition_variable queue_empty;
         std::condition_variable queue_not_empty;
 
-        concurrent::worker<decltype(task_queue), decltype(queue_mutex)> worker(
+        concurrent::worker<decltype(task_queue), decltype(queue_mutex), concurrent::spy_thread> worker(
                 task_queue,
                 queue_mutex,
                 queue_not_empty,
@@ -22,6 +23,10 @@ SCENARIO("worker can be started and stopped", "[concurrent::worker]") {
             THEN("worker shouldn't be running") {
                 REQUIRE_FALSE(worker.running());
             }
+
+            THEN("created thread shouldn't be executing any code") {
+                REQUIRE_FALSE(concurrent::spy_thread::alive_threads.front()->joinable());
+            }
         }
 
         WHEN("worker is started") {
@@ -29,6 +34,10 @@ SCENARIO("worker can be started and stopped", "[concurrent::worker]") {
 
             THEN("worker should be running") {
                 REQUIRE(worker.running());
+            }
+
+            THEN("created thread should be running") {
+                REQUIRE(concurrent::spy_thread::alive_threads.front()->joinable());
             }
         }
 
@@ -38,18 +47,27 @@ SCENARIO("worker can be started and stopped", "[concurrent::worker]") {
 
             THEN("worker shouldn't be running") {
                 REQUIRE_FALSE(worker.running());
-
-                // stopped worker requires explicit wakeup to avoid deadlock
-                queue_not_empty.notify_one();
             }
+
+            // stopped worker requires wakeup to avoid deadlock
+            queue_not_empty.notify_one();
         }
 
         WHEN("worker is moved before start") {
             auto other_worker(std::move(worker));
 
-            THEN("neither of workers should be running") {
+            THEN("original worker shouldn't be running") {
                 REQUIRE_FALSE(worker.running());
+            }
+
+            THEN("other worker shouldn't be running") {
                 REQUIRE_FALSE(other_worker.running());
+            }
+
+            THEN("no thread should be executing any code") {
+                for (auto thread: concurrent::spy_thread::alive_threads) {
+                    REQUIRE_FALSE(thread->joinable());
+                }
             }
         }
 
@@ -57,8 +75,11 @@ SCENARIO("worker can be started and stopped", "[concurrent::worker]") {
             worker.start();
             auto other_worker(std::move(worker));
 
-            THEN("original worker shouldn't be running, the other should be running") {
+            THEN("original worker shouldn't be running") {
                 REQUIRE_FALSE(worker.running());
+            }
+
+            THEN("other worker should be running") {
                 REQUIRE(other_worker.running());
             }
         }
@@ -72,7 +93,7 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
         std::condition_variable queue_empty;
         std::condition_variable queue_not_empty;
 
-        concurrent::worker<decltype(task_queue), decltype(queue_mutex)> worker(
+        concurrent::worker<decltype(task_queue), decltype(queue_mutex), concurrent::spy_thread> worker(
                 task_queue,
                 queue_mutex,
                 queue_not_empty,
