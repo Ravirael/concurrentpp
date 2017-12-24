@@ -61,18 +61,28 @@ namespace concurrent {
             m_queue_not_empty.notify_one();
         }
 
-        void wait_until_task_queue_is_empty() {
+        void wait_until_is_empty() {
             std::unique_lock<std::mutex> lock(m_queue_mutex);
             m_queue_empty.wait(lock, [this]{ return m_task_queue.empty(); });
         }
 
-        void clear_tasks() {
+        void clear() {
             std::lock_guard<mutex_type> lock(m_queue_mutex);
             m_task_queue.clear();
         }
 
+        std::size_t size() {
+            std::lock_guard<mutex_type> lock(m_queue_mutex);
+            return m_task_queue.size();
+        }
+
+        bool empty() {
+            std::lock_guard<mutex_type> lock(m_queue_mutex);
+            return m_task_queue.empty();
+        }
+
         ~n_threaded_task_queue() {
-            wait_until_task_queue_is_empty();
+            wait_until_is_empty();
             m_workers.stop();
 
             // wake all workers to be able to join their threads in destructor
