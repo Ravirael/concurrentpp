@@ -17,7 +17,7 @@ namespace concurrent {
 
     public:
         T pop() {
-            const T element{m_container.front()};
+            const T element{std::move(m_container.front())};
             m_container.pop_front();
             return std::move(element);
         }

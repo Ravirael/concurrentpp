@@ -123,11 +123,16 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
         WHEN("many tasks are added to queue and worker is notified") {
             const unsigned tasks_count = 4;
             std::atomic_uint counter{0};
+            std::timed_mutex mutex;
+            std::unique_lock<std::timed_mutex> lock(mutex);
 
             for (auto i = 0u; i < 4; ++i) {
                 task_queue.push(
-                        [&counter] {
+                        [&counter, &lock, tasks_count] {
                             ++counter;
+                            if (counter == tasks_count) {
+                                lock.unlock();
+                            }
                         }
                 );
             }
@@ -135,9 +140,8 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
             queue_not_empty.notify_one();
 
             THEN("all tasks should be finally completed") {
-                while (counter != tasks_count) {
-                    //TODO: some fallback mechanism?
-                }
+                std::unique_lock<std::timed_mutex> second_lock(mutex, std::defer_lock);
+                second_lock.try_lock_for(std::chrono::milliseconds(1000));
             }
         }
 

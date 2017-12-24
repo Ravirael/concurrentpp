@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.9)
 project(thread_pool_tests)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 FUNCTION(PREPEND var prefix)
     SET(listVar "")
@@ -14,6 +14,6 @@ ENDFUNCTION(PREPEND)
 include_directories(../src)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../src/CMakeLists.txt)
 PREPEND(ABSOLUTE_SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/../src ${SOURCE_FILES})
-set(TEST_SOURCE_FILES main.cpp worker_tests.cpp spy_thread.cpp spy_thread.h n_threaded_fifo_task_queue_tests.cpp)
+set(TEST_SOURCE_FILES main.cpp worker_tests.cpp spy_thread.cpp spy_thread.h n_threaded_fifo_task_queue_tests.cpp n_threaded_priority_task_queue_tests.cpp test_configuration.h ../src/barrier.hpp unsafe_priority_queue_tests.cpp)
 add_executable(thread_pool_tests ${TEST_SOURCE_FILES} ${ABSOLUTE_SOURCE_FILES})
 target_link_libraries(thread_pool_tests pthread)

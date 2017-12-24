@@ -85,7 +85,7 @@ namespace concurrent {
 
                 auto task = m_task_queue.pop();
 
-                const bool notify_empty =  m_task_queue.empty();
+                const bool notify_empty = m_task_queue.empty();
                 lock.unlock();
 
                 if (notify_empty) {
