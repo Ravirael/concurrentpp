@@ -27,64 +27,49 @@ SCENARIO("creating priority queue, adding and executing tasks", "[concurrent::n_
         }
 
         WHEN("a single task is pushed as r-value") {
-            concurrent::barrier barrier(2);
+            auto barrier = std::make_shared<concurrent::barrier>(2);
 
             task_queue.push(
-                    [&barrier] {
-                        barrier.wait();
+                    [barrier] {
+                        barrier->wait();
                     }
             );
 
-            THEN("the task should be finally completed") {
-                REQUIRE(barrier.wait_for(config::default_timeout));
-            }
-
-            THEN("no new thread should be spawned") {
+            THEN("the task should be finally completed and no new thread should be spawned") {
+                REQUIRE(barrier->wait_for(config::default_timeout));
                 REQUIRE(concurrent::spy_thread::alive_threads.size() == 4);
             }
-
-            // task can outlive barrier so we need to ensure that it was finished after each THEN section
-            REQUIRE(barrier.wait_for(config::default_timeout));
         }
 
         WHEN("a single task is pushed as l-value") {
-            concurrent::barrier barrier(2);
+            auto barrier = std::make_shared<concurrent::barrier>(2);
 
-            auto task = [&barrier]{
-                barrier.wait();
+            auto task = [barrier]{
+                barrier->wait();
             };
 
             task_queue.push(task);
 
-            THEN("the task should be finally completed") {
-                REQUIRE(barrier.wait_for(config::default_timeout));
-            }
-
-            THEN("no new thread should be spawned") {
+            THEN("the task should be finally completed and no new thread should be spawned") {
                 REQUIRE(concurrent::spy_thread::alive_threads.size() == 4);
+                REQUIRE(barrier->wait_for(config::default_timeout));
             }
-
-            // task can outlive barrier so we need to ensure that it was finished after each THEN section
-            REQUIRE(barrier.wait_for(config::default_timeout));
         }
 
         WHEN("4 tasks are pushed") {
-            concurrent::barrier barrier(5);
+            auto barrier = std::make_shared<concurrent::barrier>(5);
 
             for (auto i = 0u; i < 4u; ++i) {
                 task_queue.push(
-                  [&barrier] {
-                      barrier.wait();
+                  [barrier] {
+                      barrier->wait();
                   }
                 );
             }
 
             THEN("all should be executed concurrently") {
-                REQUIRE(barrier.wait_for(config::default_timeout));
+                REQUIRE(barrier->wait_for(config::default_timeout));
             }
-
-            // task can outlive barrier so we need to ensure that it was finished after each THEN section
-            REQUIRE(barrier.wait_for(config::default_timeout));
         }
 
         WHEN("8 long running tasks are pushed") {
@@ -120,6 +105,29 @@ SCENARIO("creating priority queue, adding and executing tasks", "[concurrent::n_
                 }
             }
         }
+    }
+
+    GIVEN("a 4-threaded fifo task queue filled with tasks") {
+        auto barrier = std::make_shared<concurrent::barrier>(5);
+        concurrent::n_threaded_task_queue<
+                concurrent::unsafe_fifo_queue<std::function<void(void)>>,
+                concurrent::spy_thread
+        > task_queue(
+                4,
+                concurrent::unsafe_fifo_queue<std::function<void(void)>>({
+                        [barrier]{barrier->wait();},
+                        [barrier]{barrier->wait();},
+                        [barrier]{barrier->wait();},
+                        [barrier]{barrier->wait();}
+                })
+        );
+
+        WHEN("nothing else happens") {
+            THEN("all task should finish") {
+                REQUIRE(barrier->wait_for(config::default_timeout));
+            }
+        }
+
     }
 
 

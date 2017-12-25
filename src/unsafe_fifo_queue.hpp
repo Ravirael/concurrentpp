@@ -16,8 +16,13 @@ namespace concurrent {
         container_type m_container;
 
     public:
+        explicit unsafe_fifo_queue(container_type container = container_type()):
+            m_container(std::move(container)) {
+
+        }
+
         T pop() {
-            const T element{std::move(m_container.front())};
+            T element{std::move(m_container.front())};
             m_container.pop_front();
             return std::move(element);
         }

@@ -29,17 +29,6 @@ TEST_CASE("different ways of pushing values priority queue of simple types", "[c
 TEST_CASE("different ways of pushing values to priority queue of only move-constructable types", "[concurrent::unsafe_priority_queue]") {
     concurrent::unsafe_priority_queue<std::unique_ptr<int>, std::unique_ptr<Priority>> queue;
 
-//    SECTION("pushing r-value should work") {
-//        auto pair = std::make_pair(
-//                std::make_unique<Priority>(Priority::normal),
-//                std::make_unique<int>(1)
-//        );
-//
-//        queue.push(std::move(pair));
-//
-//        REQUIRE(*queue.pop() == 1);
-//    }
-
     SECTION("emplacing should work") {
         queue.emplace(
                 std::make_unique<Priority>(Priority::normal),
@@ -92,4 +81,29 @@ SCENARIO("basic unsafe priority queue operations", "[concurrent::unsafe_priority
             }
         }
     }
+
+    GIVEN("unsafe priority queue filled with values") {
+        concurrent::unsafe_priority_queue<int, Priority> queue(
+                {
+                    std::make_pair(Priority::normal, 1),
+                    std::make_pair(Priority::low, 0),
+                    std::make_pair(Priority::high, 2),
+                    std::make_pair(Priority::low, 0),
+                    std::make_pair(Priority::normal, 1),
+                    std::make_pair(Priority::high, 2),
+                }
+        );
+
+        WHEN("nothing else happens") {
+            THEN("all values are popped in order adequate to their priorities") {
+                REQUIRE(queue.pop() == 2);
+                REQUIRE(queue.pop() == 2);
+                REQUIRE(queue.pop() == 1);
+                REQUIRE(queue.pop() == 1);
+                REQUIRE(queue.pop() == 0);
+                REQUIRE(queue.pop() == 0);
+            }
+        }
+    }
 }
+

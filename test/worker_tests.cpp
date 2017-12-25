@@ -106,11 +106,11 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
 
         WHEN("task is added to queue and worker is notified") {
             std::unique_lock<std::mutex> lock(queue_mutex);
-            concurrent::barrier barrier(2);
+            auto barrier = std::make_shared<concurrent::barrier>(2);
 
             task_queue.push(
-                    [&barrier] {
-                        barrier.wait();
+                    [barrier] {
+                        barrier->wait();
                     }
             );
 
@@ -119,24 +119,24 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
             queue_not_empty.notify_one();
 
             THEN("the task should be finally completed") {
-                REQUIRE(barrier.wait_for(config::default_timeout));
+                REQUIRE(barrier->wait_for(config::default_timeout));
             }
         }
 
         WHEN("many tasks are added to queue and worker is notified") {
             const unsigned tasks_count = 4;
-            std::vector<concurrent::barrier> barriers;
+            auto barriers = std::make_shared<std::vector<concurrent::barrier>>();
 
             for (auto i = 0u; i < tasks_count; ++i) {
-                barriers.emplace_back(2);
+                barriers->emplace_back(2);
             }
 
             std::unique_lock<std::mutex> lock(queue_mutex);
 
             for (auto i = 0u; i < tasks_count; ++i) {
                 task_queue.push(
-                        [&barriers, i] {
-                            barriers[i].wait();
+                        [barriers, i] {
+                            barriers->at(i).wait();
                         }
                 );
             }
@@ -148,13 +148,8 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
             THEN("all tasks should be completed in order") {
                 for (auto i = 0u; i < tasks_count; ++i) {
                     INFO("Barrier number " + std::to_string(i));
-                    REQUIRE(barriers[i].wait_for(config::default_timeout));
+                    REQUIRE(barriers->at(i).wait_for(config::default_timeout));
                 }
-            }
-
-            for (auto i = 0u; i < tasks_count; ++i) {
-                INFO("Barrier number " + std::to_string(i));
-                REQUIRE(barriers[i].wait_for(config::default_timeout));
             }
         }
 
@@ -163,11 +158,11 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
 
             AND_WHEN("task is added to queue and worker is notified") {
                 std::unique_lock<std::mutex> lock(queue_mutex);
-                concurrent::barrier barrier(2);
+                auto barrier = std::make_shared<concurrent::barrier>(2);
 
                 task_queue.push(
-                        [&barrier] {
-                            barrier.wait();
+                        [barrier] {
+                            barrier->wait();
                         }
                 );
 
@@ -176,7 +171,7 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
                 queue_not_empty.notify_one();
 
                 THEN("the task shouldn't be completed") {
-                    REQUIRE_FALSE(barrier.wait_for(std::chrono::milliseconds(100)));
+                    REQUIRE_FALSE(barrier->wait_for(std::chrono::milliseconds(100)));
                 }
             }
         }

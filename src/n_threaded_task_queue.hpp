@@ -21,8 +21,11 @@ namespace concurrent {
         concurrent::workers_vector<worker_type> m_workers;
 
     public:
-        explicit n_threaded_task_queue(std::size_t number_of_threads = std::thread::hardware_concurrency()):
-                m_task_queue(),
+        explicit n_threaded_task_queue(
+                std::size_t number_of_threads = std::thread::hardware_concurrency(),
+                queue_type queue = queue_type()
+        ):
+                m_task_queue(std::move(queue)),
                 m_queue_mutex(),
                 m_queue_not_empty(),
                 m_workers() {

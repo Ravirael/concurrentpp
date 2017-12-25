@@ -2,7 +2,7 @@
 #include <catch.hpp>
 
 int main( int argc, char* argv[] ) {
-    constexpr auto number_of_runs = 1u;
+    constexpr auto number_of_runs = 10u;
     auto result = 0;
     Catch::Session session;
 
