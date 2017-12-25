@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include <condition_variable>
+#include <future>
+#include <type_traits>
 #include "worker.hpp"
 #include "workers_pool.hpp"
 
@@ -61,6 +63,14 @@ namespace concurrent {
                 m_task_queue.emplace(std::forward<Args>(args)...);
             }
             m_queue_not_empty.notify_one();
+        }
+
+        template < class R>
+        std::future<R> push_with_result(const std::function<R()> &function) {
+            auto task = std::make_shared<std::packaged_task<R()>>(function);
+            auto result = task->get_future();
+            push([task]{task->operator()();});
+            return result;
         }
 
         void wait_until_is_empty() {

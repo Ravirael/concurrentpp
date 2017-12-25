@@ -72,6 +72,14 @@ SCENARIO("creating priority queue, adding and executing tasks", "[concurrent::n_
             }
         }
 
+        WHEN("task with result is pushed") {
+            auto result = task_queue.push_with_result<int>([]{return 4;});
+
+            THEN("task should finally be executed") {
+                REQUIRE(result.get() == 4);
+            }
+        }
+
         WHEN("8 long running tasks are pushed") {
             for (auto i = 0u; i < 8u; ++i) {
                 task_queue.push(
@@ -127,8 +135,6 @@ SCENARIO("creating priority queue, adding and executing tasks", "[concurrent::n_
                 REQUIRE(barrier->wait_for(config::default_timeout));
             }
         }
-
     }
-
 
 }
