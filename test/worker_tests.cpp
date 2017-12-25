@@ -2,7 +2,9 @@
 #include <worker.hpp>
 #include <unsafe_fifo_queue.hpp>
 #include <functional>
+#include <barrier.hpp>
 #include "spy_thread.h"
+#include "test_configuration.h"
 
 
 SCENARIO("worker can be started and stopped", "[concurrent::worker]") {
@@ -12,7 +14,7 @@ SCENARIO("worker can be started and stopped", "[concurrent::worker]") {
         std::condition_variable queue_empty;
         std::condition_variable queue_not_empty;
 
-        concurrent::worker<decltype(task_queue), decltype(queue_mutex), concurrent::spy_thread> worker(
+        concurrent::worker<decltype(task_queue), concurrent::spy_thread> worker(
                 task_queue,
                 queue_mutex,
                 queue_not_empty,
@@ -93,7 +95,7 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
         std::condition_variable queue_empty;
         std::condition_variable queue_not_empty;
 
-        concurrent::worker<decltype(task_queue), decltype(queue_mutex), concurrent::spy_thread> worker(
+        concurrent::worker<decltype(task_queue), concurrent::spy_thread> worker(
                 task_queue,
                 queue_mutex,
                 queue_not_empty,
@@ -103,45 +105,56 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
         worker.start();
 
         WHEN("task is added to queue and worker is notified") {
-            std::timed_mutex mutex;
-            std::unique_lock<std::timed_mutex> lock(mutex);
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            concurrent::barrier barrier(2);
 
             task_queue.push(
-                    [&lock] {
-                        lock.unlock();
+                    [&barrier] {
+                        barrier.wait();
                     }
             );
+
+            lock.unlock();
 
             queue_not_empty.notify_one();
 
             THEN("the task should be finally completed") {
-                std::unique_lock<std::timed_mutex> second_lock(mutex, std::defer_lock);
-                REQUIRE(second_lock.try_lock_for(std::chrono::milliseconds(1000)));
+                REQUIRE(barrier.wait_for(config::default_timeout));
             }
         }
 
         WHEN("many tasks are added to queue and worker is notified") {
             const unsigned tasks_count = 4;
-            std::atomic_uint counter{0};
-            std::timed_mutex mutex;
-            std::unique_lock<std::timed_mutex> lock(mutex);
+            std::vector<concurrent::barrier> barriers;
 
-            for (auto i = 0u; i < 4; ++i) {
+            for (auto i = 0u; i < tasks_count; ++i) {
+                barriers.emplace_back(2);
+            }
+
+            std::unique_lock<std::mutex> lock(queue_mutex);
+
+            for (auto i = 0u; i < tasks_count; ++i) {
                 task_queue.push(
-                        [&counter, &lock, tasks_count] {
-                            ++counter;
-                            if (counter == tasks_count) {
-                                lock.unlock();
-                            }
+                        [&barriers, i] {
+                            barriers[i].wait();
                         }
                 );
             }
 
+            lock.unlock();
+
             queue_not_empty.notify_one();
 
-            THEN("all tasks should be finally completed") {
-                std::unique_lock<std::timed_mutex> second_lock(mutex, std::defer_lock);
-                second_lock.try_lock_for(std::chrono::milliseconds(1000));
+            THEN("all tasks should be completed in order") {
+                for (auto i = 0u; i < tasks_count; ++i) {
+                    INFO("Barrier number " + std::to_string(i));
+                    REQUIRE(barriers[i].wait_for(config::default_timeout));
+                }
+            }
+
+            for (auto i = 0u; i < tasks_count; ++i) {
+                INFO("Barrier number " + std::to_string(i));
+                REQUIRE(barriers[i].wait_for(config::default_timeout));
             }
         }
 
@@ -149,20 +162,21 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
             worker.stop();
 
             AND_WHEN("task is added to queue and worker is notified") {
-                std::timed_mutex mutex;
-                std::unique_lock<std::timed_mutex> lock(mutex);
+                std::unique_lock<std::mutex> lock(queue_mutex);
+                concurrent::barrier barrier(2);
 
                 task_queue.push(
-                        [&lock] {
-                            lock.unlock();
+                        [&barrier] {
+                            barrier.wait();
                         }
                 );
+
+                lock.unlock();
 
                 queue_not_empty.notify_one();
 
                 THEN("the task shouldn't be completed") {
-                    std::unique_lock<std::timed_mutex> second_lock(mutex, std::defer_lock);
-                    REQUIRE_FALSE(second_lock.try_lock_for(std::chrono::milliseconds(100)));
+                    REQUIRE_FALSE(barrier.wait_for(std::chrono::milliseconds(100)));
                 }
             }
         }

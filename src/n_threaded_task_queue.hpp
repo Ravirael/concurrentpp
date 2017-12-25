@@ -5,18 +5,17 @@
 #include "workers_pool.hpp"
 
 namespace concurrent {
-    template <class Mutex, class Queue, class Thread>
+    template <class Queue, class Thread>
     class n_threaded_task_queue {
     public:
-        using mutex_type = Mutex;
         using queue_type = Queue;
         using thread_type = Thread;
-        using worker_type = concurrent::worker<queue_type, mutex_type, thread_type>;
+        using worker_type = concurrent::worker<queue_type, thread_type>;
         using pushed_value_type = typename Queue::pushed_value_type;
 
     private:
         queue_type m_task_queue;
-        mutex_type m_queue_mutex;
+        std::mutex m_queue_mutex;
         std::condition_variable m_queue_not_empty;
         std::condition_variable m_queue_empty;
         concurrent::workers_vector<worker_type> m_workers;
@@ -38,7 +37,7 @@ namespace concurrent {
 
         void push(const pushed_value_type &element) {
             {
-                std::lock_guard<mutex_type> lock(m_queue_mutex);
+                std::lock_guard<std::mutex> lock(m_queue_mutex);
                 m_task_queue.push(element);
             }
             m_queue_not_empty.notify_one();
@@ -46,7 +45,7 @@ namespace concurrent {
 
         void push(pushed_value_type &&element) {
             {
-                std::lock_guard<mutex_type> lock(m_queue_mutex);
+                std::lock_guard<std::mutex> lock(m_queue_mutex);
                 m_task_queue.push(std::move(element));
             }
             m_queue_not_empty.notify_one();
@@ -55,7 +54,7 @@ namespace concurrent {
         template< class... Args >
         void emplace( Args&&... args ) {
             {
-                std::lock_guard<mutex_type> lock(m_queue_mutex);
+                std::lock_guard<std::mutex> lock(m_queue_mutex);
                 m_task_queue.emplace(std::forward<Args>(args)...);
             }
             m_queue_not_empty.notify_one();
@@ -67,17 +66,17 @@ namespace concurrent {
         }
 
         void clear() {
-            std::lock_guard<mutex_type> lock(m_queue_mutex);
+            std::lock_guard<std::mutex> lock(m_queue_mutex);
             m_task_queue.clear();
         }
 
         std::size_t size() {
-            std::lock_guard<mutex_type> lock(m_queue_mutex);
+            std::lock_guard<std::mutex> lock(m_queue_mutex);
             return m_task_queue.size();
         }
 
         bool empty() {
-            std::lock_guard<mutex_type> lock(m_queue_mutex);
+            std::lock_guard<std::mutex> lock(m_queue_mutex);
             return m_task_queue.empty();
         }
 

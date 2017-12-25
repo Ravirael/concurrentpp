@@ -3,6 +3,9 @@ project(thread_pool_tests)
 
 set(CMAKE_CXX_STANDARD 14)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++14")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb -O0 -fsanitize=thread")
+
 FUNCTION(PREPEND var prefix)
     SET(listVar "")
     FOREACH(f ${ARGN})

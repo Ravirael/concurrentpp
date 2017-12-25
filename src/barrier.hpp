@@ -5,13 +5,8 @@
 
 namespace concurrent {
 
-    template <class Mutex>
     class barrier {
-    public:
-        using mutex_type = Mutex;
-
-    private:
-        mutex_type m_mutex;
+        std::mutex m_mutex;
         std::condition_variable m_cv;
         std::size_t m_count;
 
@@ -21,17 +16,37 @@ namespace concurrent {
 
         }
 
+        barrier(const barrier &second):
+            m_count(second.m_count) {
+
+        }
+
         void wait() {
-            std::unique_lock<mutex_type> lock{m_mutex};
-            if (--m_count == 0) {
+            std::unique_lock<std::mutex> lock{m_mutex};
+            if (m_count > 0) {
+                --m_count;
+            }
+
+            if (m_count == 0) {
                 m_cv.notify_all();
             } else {
                 m_cv.wait(lock, [this] { return m_count == 0; });
             }
         }
 
-        mutex_type &mutex() {
-            return m_mutex;
+        template<typename _Rep, typename _Period>
+        bool wait_for(const std::chrono::duration<_Rep, _Period> &time) {
+            std::unique_lock<std::mutex> lock{m_mutex};
+            if (m_count > 0) {
+                --m_count;
+            }
+
+            if (m_count == 0) {
+                m_cv.notify_all();
+                return true;
+            } else {
+                return m_cv.wait_for(lock, time, [this] { return m_count == 0; });
+            }
         }
     };
 }
