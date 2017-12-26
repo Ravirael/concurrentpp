@@ -3,6 +3,7 @@
 #include <unsafe_fifo_queue.hpp>
 #include <functional>
 #include <barrier.hpp>
+#include <infinite_waiting_strategy.hpp>
 #include "spy_thread.h"
 #include "test_configuration.h"
 
@@ -14,7 +15,7 @@ SCENARIO("worker can be started and stopped", "[concurrent::worker]") {
         std::condition_variable queue_empty;
         std::condition_variable queue_not_empty;
 
-        concurrent::worker<decltype(task_queue), concurrent::spy_thread> worker(
+        concurrent::worker<decltype(task_queue), concurrent::infinite_waiting_strategy, concurrent::spy_thread> worker(
                 task_queue,
                 queue_mutex,
                 queue_not_empty,
@@ -95,7 +96,7 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
         std::condition_variable queue_empty;
         std::condition_variable queue_not_empty;
 
-        concurrent::worker<decltype(task_queue), concurrent::spy_thread> worker(
+        concurrent::worker<decltype(task_queue), concurrent::infinite_waiting_strategy, concurrent::spy_thread> worker(
                 task_queue,
                 queue_mutex,
                 queue_not_empty,

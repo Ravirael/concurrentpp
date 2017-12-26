@@ -5,6 +5,7 @@
 #include <type_traits>
 #include "worker.hpp"
 #include "workers_pool.hpp"
+#include "infinite_waiting_strategy.hpp"
 
 namespace concurrent {
     template <class Queue, class Thread>
@@ -12,7 +13,7 @@ namespace concurrent {
     public:
         using queue_type = Queue;
         using thread_type = Thread;
-        using worker_type = concurrent::worker<queue_type, thread_type>;
+        using worker_type = concurrent::worker<queue_type, concurrent::infinite_waiting_strategy, thread_type>;
         using pushed_value_type = typename Queue::pushed_value_type;
 
     private:
@@ -33,7 +34,7 @@ namespace concurrent {
                 m_workers() {
             m_workers.reserve(number_of_threads);
 
-            for (std::size_t i = 0; i < number_of_threads; ++ i) {
+            for (std::size_t i = 0u; i < number_of_threads; ++i) {
                 m_workers.emplace_back(m_task_queue, m_queue_mutex, m_queue_not_empty, m_queue_empty);
             }
 
