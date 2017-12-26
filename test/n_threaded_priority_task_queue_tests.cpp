@@ -7,7 +7,7 @@
 #include "spy_thread.h"
 #include "test_configuration.h"
 
-SCENARIO("creating queue, adding and executing tasks", "[concurrent::n_threaded_priority_task_queue]") {
+SCENARIO("creating priority task queue, adding and executing tasks", "[concurrent::n_threaded_priority_task_queue]") {
     GIVEN("a 4-threaded priority task queue") {
         concurrent::n_threaded_task_queue<
                 concurrent::unsafe_priority_queue<std::function<void(void)>, int>,

@@ -3,18 +3,15 @@
 #include <condition_variable>
 
 namespace concurrent {
-    template < class Rep, class Period>
+    template < class Duration >
     class timeout_waiting_strategy {
-        const std::chrono::duration<Rep, Period> m_timeout;
-        std::condition_variable &m_timeout_fired;
+        const Duration m_timeout;
 
     public:
-        timeout_waiting_strategy(
-                std::chrono::duration<Rep, Period> timeout,
-                std::condition_variable &timeout_fired
+        explicit timeout_waiting_strategy(
+                Duration timeout
         ) noexcept:
-                m_timeout(std::move(timeout)),
-                m_timeout_fired(timeout_fired) {
+                m_timeout(std::move(timeout)) {
 
         }
 
@@ -23,14 +20,8 @@ namespace concurrent {
                 std::condition_variable &condition_variable,
                 std::unique_lock<std::mutex> &lock,
                 Predicate &&predicate
-        ) {
-            const auto result = condition_variable.wait_for(lock, m_timeout, std::forward<Predicate>(predicate));
-
-            if (!result) {
-                m_timeout_fired.notify_one();
-            }
-
-            return result;
+        ) const {
+            return condition_variable.wait_for(lock, m_timeout, std::forward<Predicate>(predicate));
         }
     };
 }

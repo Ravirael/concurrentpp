@@ -7,7 +7,7 @@
 #include "spy_thread.h"
 #include "test_configuration.h"
 
-SCENARIO("creating priority queue, adding and executing tasks", "[concurrent::n_threaded_task_queue]") {
+SCENARIO("creating task queue, adding and executing tasks", "[concurrent::n_threaded_task_queue]") {
     GIVEN("a 4-threaded fifo task queue") {
         concurrent::n_threaded_task_queue<
                 concurrent::unsafe_fifo_queue<std::function<void(void)>>,
@@ -87,6 +87,10 @@ SCENARIO("creating priority queue, adding and executing tasks", "[concurrent::n_
                             std::this_thread::sleep_for(std::chrono::milliseconds(10));
                         }
                 );
+            }
+
+            THEN("number of threads should not increase") {
+                REQUIRE(concurrent::spy_thread::alive_threads.size() == 4);
             }
 
             AND_WHEN("wait_until_is_empty is called") {

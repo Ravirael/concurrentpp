@@ -4,6 +4,7 @@
 #include <numeric>
 #include <vector>
 #include <list>
+#include <algorithm>
 
 namespace concurrent {
 
@@ -58,6 +59,14 @@ namespace concurrent {
             m_container.emplace_back(std::forward<Args>(args)...);
         }
 
+        worker_type &back() {
+            return m_container.back();
+        }
+
+        const worker_type &back() const {
+            return m_container.back();
+        }
+
         void stop() {
             for (auto &worker: *this) {
                 worker.stop();
@@ -68,6 +77,25 @@ namespace concurrent {
             for (auto &worker: *this) {
                 worker.start();
             }
+        }
+
+        void remove_stopped() {
+            for (auto it = begin(); it != end(); ++it) {
+                if (!it->running()) {
+                    it = m_container.erase(it);
+                }
+            }
+        }
+
+        std::size_t stopped_count() const {
+            return std::accumulate(
+                    begin(),
+                    end(),
+                    0u,
+                    [](std::size_t acc, const worker_type &worker) {
+                        return acc + !worker.running();
+                    }
+            );
         }
 
     };

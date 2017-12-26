@@ -16,6 +16,7 @@ namespace concurrent {
         std::mutex &m_mutex;
         std::condition_variable &m_queue_not_empty;
         std::condition_variable &m_queue_empty;
+        std::condition_variable &m_thread_exited;
         WaitingStrategy m_waiting_strategy;
         std::atomic_bool m_stopped{true};
         thread_type m_thread;
@@ -26,12 +27,14 @@ namespace concurrent {
                 std::mutex &mutex,
                 std::condition_variable &queue_not_empty,
                 std::condition_variable &queue_empty,
+                std::condition_variable &thread_exited,
                 WaitingStrategy waiting_strategy = WaitingStrategy()
         ):
                 m_task_queue(task_queue),
                 m_mutex(mutex),
                 m_queue_not_empty(queue_not_empty),
                 m_queue_empty(queue_empty),
+                m_thread_exited(thread_exited),
                 m_waiting_strategy(std::move(waiting_strategy)) {
 
         }
@@ -41,6 +44,7 @@ namespace concurrent {
             m_mutex(other.m_mutex),
             m_queue_not_empty(other.m_queue_not_empty),
             m_queue_empty(other.m_queue_empty),
+            m_thread_exited(other.m_thread_exited),
             m_waiting_strategy(std::move(other.m_waiting_strategy)) {
 
             if (other.running()) {
@@ -88,6 +92,7 @@ namespace concurrent {
                 );
 
                 if (m_stopped || !waiting_result) {
+                    m_stopped = true;
                     break;
                 }
 
@@ -102,6 +107,7 @@ namespace concurrent {
 
                 task();
             }
+            m_thread_exited.notify_one();
         }
     };
 }

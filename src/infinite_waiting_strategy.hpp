@@ -11,7 +11,7 @@ namespace concurrent {
                 std::condition_variable &condition_variable,
                 std::unique_lock<std::mutex> &lock,
                 Predicate &&predicate
-        ) {
+        ) const {
             condition_variable.wait(lock, std::forward<Predicate>(predicate));
             return true;
         }
