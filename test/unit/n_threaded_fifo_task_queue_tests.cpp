@@ -4,14 +4,19 @@
 #include <unsafe_fifo_queue.hpp>
 #include <functional>
 #include <barrier.hpp>
+#include <task_queue_extension.hpp>
 #include "spy_thread.h"
 #include "test_configuration.h"
 
 SCENARIO("creating task queue, adding and executing tasks", "[concurrent::n_threaded_task_queue]") {
     GIVEN("a 4-threaded fifo task queue") {
-        concurrent::n_threaded_task_queue<
-                concurrent::unsafe_fifo_queue<std::function<void(void)>>,
-                concurrent::spy_thread
+        concurrent::task_queue_extension<
+                concurrent::n_threaded_task_queue<
+                    concurrent::unsafe_fifo_queue<
+                            std::function<void(void)>
+                    >,
+                    concurrent::spy_thread
+                >
         > task_queue(4);
 
         WHEN("nothing else happens") {
@@ -73,7 +78,8 @@ SCENARIO("creating task queue, adding and executing tasks", "[concurrent::n_thre
         }
 
         WHEN("task with result is pushed") {
-            auto result = task_queue.push_with_result<int>([]{return 4;});
+            std::function<int()> foo = []{return 4;};
+            auto result = task_queue.push_with_result(foo);
 
             THEN("task should finally be executed") {
                 REQUIRE(result.get() == 4);
@@ -116,6 +122,25 @@ SCENARIO("creating task queue, adding and executing tasks", "[concurrent::n_thre
                     REQUIRE(task_queue.size() == 0);
                 }
             }
+        }
+
+        WHEN("task adding another task is pushed") {
+            auto barrier = std::make_shared<concurrent::barrier>(2);
+
+            task_queue.push(
+                    [&task_queue, barrier] {
+                        task_queue.push(
+                                [barrier] {
+                                    barrier->wait();
+                                }
+                        );
+                    }
+            );
+
+            THEN("tasks are finally finished") {
+                REQUIRE(barrier->wait_for(config::default_timeout));
+            }
+
         }
     }
 

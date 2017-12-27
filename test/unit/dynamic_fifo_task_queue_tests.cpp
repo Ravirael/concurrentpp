@@ -78,6 +78,25 @@ SCENARIO("creating dynamic queue, adding and executing tasks", "[concurrent::dyn
             }
         }
 
+        WHEN("task adding another task is pushed") {
+            auto barrier = std::make_shared<concurrent::barrier>(2);
+
+            task_queue.push(
+                    [&task_queue, barrier] {
+                        task_queue.push(
+                                [barrier] {
+                                    barrier->wait();
+                                }
+                        );
+                    }
+            );
+
+            THEN("tasks are finally finished") {
+                REQUIRE(barrier->wait_for(config::default_timeout));
+            }
+
+        }
+
         WHEN("8 tasks are pushed") {
             auto first_barrier = std::make_shared<concurrent::barrier>(5);
             auto second_barrier = std::make_shared<concurrent::barrier>(5);

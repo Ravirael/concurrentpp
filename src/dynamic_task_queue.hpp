@@ -59,22 +59,24 @@ namespace concurrent {
 
         void push(const pushed_value_type &element) {
             {
+                std::lock_guard<std::mutex> workers_lock(m_dynamic_workers_mutex);
                 std::lock_guard<std::mutex> lock(this->m_queue_mutex);
                 this->m_task_queue.push(element);
-            }
-            if (!conditionally_increase_core_workers_size()) {
-                conditionally_increase_dynamic_workers_size();
+                if (!conditionally_increase_core_workers_size()) {
+                    conditionally_increase_dynamic_workers_size();
+                }
             }
             this->m_queue_not_empty.notify_one();
         }
 
         void push(pushed_value_type &&element) {
             {
+                std::lock_guard<std::mutex> workers_lock(m_dynamic_workers_mutex);
                 std::lock_guard<std::mutex> lock(this->m_queue_mutex);
                 this->m_task_queue.push(std::move(element));
-            }
-            if (!conditionally_increase_core_workers_size()) {
-                conditionally_increase_dynamic_workers_size();
+                if (!conditionally_increase_core_workers_size()) {
+                    conditionally_increase_dynamic_workers_size();
+                }
             }
             this->m_queue_not_empty.notify_one();
         }
@@ -82,21 +84,14 @@ namespace concurrent {
         template< class... Args >
         void emplace( Args&&... args ) {
             {
+                std::lock_guard<std::mutex> workers_lock(m_dynamic_workers_mutex);
                 std::lock_guard<std::mutex> lock(this->m_queue_mutex);
                 this->m_task_queue.emplace(std::forward<Args>(args)...);
-            }
-            if (!conditionally_increase_core_workers_size()) {
-                conditionally_increase_dynamic_workers_size();
+                if (!conditionally_increase_core_workers_size()) {
+                    conditionally_increase_dynamic_workers_size();
+                }
             }
             this->m_queue_not_empty.notify_one();
-        }
-
-        template < class R>
-        std::future<R> push_with_result(const std::function<R()> &function) {
-            auto task = std::make_shared<std::packaged_task<R()>>(function);
-            auto result = task->get_future();
-            push([task]{task->operator()();});
-            return result;
         }
 
         ~dynamic_task_queue() {
@@ -137,7 +132,6 @@ namespace concurrent {
         }
 
         bool conditionally_increase_dynamic_workers_size() {
-            std::lock_guard<std::mutex> lock(m_dynamic_workers_mutex);
             if (this->m_task_queue.size() >= m_max_queue_length
                     && m_dynamic_workers.size() < m_dynamic_workers_max_size) {
                 m_dynamic_workers.emplace_back(

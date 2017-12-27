@@ -72,7 +72,7 @@ unsigned performUsingThreads(unsigned count) {
 }
 
 int main() {
-    const auto count = 10000u;
+    const auto count = 1000u;
     std::cout << performUsingThreads(count)          << std::endl;
     std::cout << performUsingDynamicTaskQueue(count) << std::endl;
     std::cout << performUsingStaticTaskQueue(count)  << std::endl;

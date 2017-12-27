@@ -67,7 +67,7 @@ namespace concurrent {
 
         void stop() {
             std::lock_guard<std::mutex> lock(m_mutex);
-            m_stopped = true;            
+            m_stopped = true;
         }
 
         ~worker() {
@@ -91,12 +91,10 @@ namespace concurrent {
                         m_queue_not_empty,
                         lock,
                         [this] {
-                            bool expected = true;
                             return !m_task_queue.empty() || m_stopped;
                         }
                 );
 
-                bool expected = true;
                 if (m_stopped || !waiting_result) {
                     m_stopped = true;
                     break;
