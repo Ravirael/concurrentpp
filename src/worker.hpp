@@ -18,7 +18,7 @@ namespace concurrent {
         std::condition_variable &m_queue_empty;
         std::condition_variable &m_thread_exited;
         WaitingStrategy m_waiting_strategy;
-        std::atomic_bool m_stopped{true};
+        bool m_stopped{true};
         thread_type m_thread;
 
     public:
@@ -54,18 +54,20 @@ namespace concurrent {
         }
 
         void start() {
-            if (!running()) {
+            if (!m_thread.joinable()) {
                 m_stopped = false;
                 m_thread = std::thread{[this] { consume_and_execute(); }};
             }
         }
 
         bool running() const {
+            std::lock_guard<std::mutex> lock(m_mutex);
             return !m_stopped;
         }
 
         void stop() {
-            m_stopped = true;
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_stopped = true;            
         }
 
         ~worker() {
@@ -88,9 +90,13 @@ namespace concurrent {
                 const auto waiting_result = m_waiting_strategy(
                         m_queue_not_empty,
                         lock,
-                        [this]{ return !m_task_queue.empty() || m_stopped; }
+                        [this] {
+                            bool expected = true;
+                            return !m_task_queue.empty() || m_stopped;
+                        }
                 );
 
+                bool expected = true;
                 if (m_stopped || !waiting_result) {
                     m_stopped = true;
                     break;

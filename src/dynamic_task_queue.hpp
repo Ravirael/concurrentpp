@@ -61,9 +61,9 @@ namespace concurrent {
             {
                 std::lock_guard<std::mutex> lock(this->m_queue_mutex);
                 this->m_task_queue.push(element);
-                if (!conditionally_increase_core_workers_size()) {
-                    conditionally_increase_dynamic_workers_size();
-                }
+            }
+            if (!conditionally_increase_core_workers_size()) {
+                conditionally_increase_dynamic_workers_size();
             }
             this->m_queue_not_empty.notify_one();
         }
@@ -72,9 +72,9 @@ namespace concurrent {
             {
                 std::lock_guard<std::mutex> lock(this->m_queue_mutex);
                 this->m_task_queue.push(std::move(element));
-                if (!conditionally_increase_core_workers_size()) {
-                    conditionally_increase_dynamic_workers_size();
-                }
+            }
+            if (!conditionally_increase_core_workers_size()) {
+                conditionally_increase_dynamic_workers_size();
             }
             this->m_queue_not_empty.notify_one();
         }
@@ -84,9 +84,9 @@ namespace concurrent {
             {
                 std::lock_guard<std::mutex> lock(this->m_queue_mutex);
                 this->m_task_queue.emplace(std::forward<Args>(args)...);
-                if (!conditionally_increase_core_workers_size()) {
-                    conditionally_increase_dynamic_workers_size();
-                }
+            }
+            if (!conditionally_increase_core_workers_size()) {
+                conditionally_increase_dynamic_workers_size();
             }
             this->m_queue_not_empty.notify_one();
         }
@@ -103,7 +103,10 @@ namespace concurrent {
             this->wait_until_is_empty();
 
             // to close cleaning thread
-            m_stop_cleaning = true;
+            {
+                std::lock_guard<std::mutex> lock(m_dynamic_workers_mutex);
+                m_stop_cleaning = true;
+            }
             this->m_worker_exited.notify_one();
             m_cleaning_thread.join();
 

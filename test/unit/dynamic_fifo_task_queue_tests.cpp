@@ -41,7 +41,7 @@ SCENARIO("creating dynamic queue, adding and executing tasks", "[concurrent::dyn
             );
 
             THEN("the task should be finally completed and one new thread should be spawned") {
-                REQUIRE(concurrent::spy_thgit sread::alive_threads.size() == 2);
+                REQUIRE(concurrent::spy_thread::alive_threads.size() == 2);
                 REQUIRE(barrier->wait_for(config::default_timeout));
             }
         }
@@ -106,7 +106,7 @@ SCENARIO("creating dynamic queue, adding and executing tasks", "[concurrent::dyn
                     REQUIRE(first_barrier->wait_for(config::default_timeout));
 
                     AND_WHEN("we wait longer than timeout") {
-                        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(30));
                         THEN("dynamic threads are killed") {
                             std::lock_guard<std::mutex> lock(concurrent::spy_thread::alive_threads_mutex);
                             REQUIRE(concurrent::spy_thread::alive_threads.size() == 5);
