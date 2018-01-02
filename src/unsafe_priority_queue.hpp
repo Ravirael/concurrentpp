@@ -1,8 +1,9 @@
 #pragma once
+
 #include <map>
 
 namespace concurrent {
-    template <class T, class Priority, class Container = std::multimap<Priority, T, std::greater<Priority>>>
+    template <class Priority, class T, class Container = std::multimap<Priority, T, std::greater<Priority>>>
     class unsafe_priority_queue {
     public:
         using poped_value_type = typename Container::mapped_type;

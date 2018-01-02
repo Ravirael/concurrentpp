@@ -1,11 +1,11 @@
 #pragma once
 
-#include <deque>
+#include <vector>
 
 namespace concurrent {
 
-    template <class T, class Container = std::deque<T>>
-    class unsafe_fifo_queue {
+    template <class T, class Container = std::vector<T>>
+    class unsafe_lifo_queue {
     public:
         using poped_value_type = T;
         using pushed_value_type = T;
@@ -15,14 +15,14 @@ namespace concurrent {
         container_type m_container;
 
     public:
-        explicit unsafe_fifo_queue(container_type container = container_type()):
+        explicit unsafe_lifo_queue(container_type container = container_type()):
             m_container(std::move(container)) {
 
         }
 
         T pop() {
-            T element{std::move(m_container.front())};
-            m_container.pop_front();
+            T element{std::move(m_container.back())};
+            m_container.pop_back();
             return std::move(element);
         }
 

@@ -19,17 +19,6 @@ namespace concurrent {
             return result;
         }
 
-        template <
-                class P,
-                class F,
-                typename R = decltype(std::declval<F>()())
-        >
-        std::future<R> push_with_result(std::pair<P, F> pair) {
-            auto task = std::make_shared<std::packaged_task<R()>>(std::move(pair.second));
-            auto result = task->get_future();
-            this->push(std::make_pair(std::move(pair.first), [task]{task->operator()();}));
-            return result;
-        }
     };
 }
 

@@ -6,7 +6,7 @@
 
 using namespace std::chrono_literals;
 
-const auto sleep_time = 500us;
+const auto sleep_time = 100us;
 
 unsigned performUsingDynamicTaskQueue(unsigned count) {
     lifetime_logger logger("Using dynamic threaded thread pool: ");
@@ -33,7 +33,7 @@ unsigned performUsingStaticTaskQueue(unsigned count) {
     std::atomic_uint atomic{0};
 
     {
-        concurrent::n_threaded_fifo_task_queue queue(32);
+        concurrent::n_threaded_fifo_task_queue queue(16);
 
         for (auto i = 0u; i < count; ++i) {
             queue.push(

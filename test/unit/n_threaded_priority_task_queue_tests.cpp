@@ -4,14 +4,17 @@
 #include <functional>
 #include <unsafe_priority_queue.hpp>
 #include <barrier.hpp>
+#include <priority_task_queue_extension.hpp>
 #include "spy_thread.h"
 #include "test_configuration.h"
 
 SCENARIO("creating priority task queue, adding and executing tasks", "[concurrent::n_threaded_priority_task_queue]") {
     GIVEN("a 4-threaded priority task queue") {
-        concurrent::n_threaded_task_queue<
-                concurrent::unsafe_priority_queue<std::function<void(void)>, int>,
-                concurrent::spy_thread
+        concurrent::priority_task_queue_extension<
+            concurrent::n_threaded_task_queue<
+                    concurrent::unsafe_priority_queue<std::function<void(void)>, int>,
+                    concurrent::spy_thread
+            >
         > task_queue(4);
 
         WHEN("task with different priorities are added") {
@@ -77,6 +80,22 @@ SCENARIO("creating priority task queue, adding and executing tasks", "[concurren
                 }
             }
 
+        }
+
+        WHEN("task with result is pushed") {
+            auto result = task_queue.push_with_result(std::make_pair(0, []{return 1;}));
+
+            THEN("the task is finally finished") {
+                REQUIRE(result.get() == 1);
+            }
+        }
+
+        WHEN("task with result is emplaced") {
+            auto result = task_queue.emplace_with_result(0, []{return 1;});
+
+            THEN("the task is finally finished") {
+                REQUIRE(result.get() == 1);
+            }
         }
 
     }
