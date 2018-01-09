@@ -5,11 +5,12 @@
 
 namespace concurrent {
 
-    template <class Queue>
+    template <class Queue, class Semaphore>
     class task_queue_base {
     public:
         using queue_type = Queue;
         using pushed_value_type = typename Queue::pushed_value_type;
+        using semaphore_type = Semaphore;
 
     protected:
         queue_type m_task_queue;
@@ -17,6 +18,7 @@ namespace concurrent {
         std::condition_variable m_queue_not_empty;
         std::condition_variable m_queue_empty;
         std::condition_variable m_worker_exited;
+        semaphore_type m_semaphore;
 
         explicit task_queue_base(
                 queue_type queue = queue_type()
@@ -25,7 +27,8 @@ namespace concurrent {
             m_queue_mutex(),
             m_queue_not_empty(),
             m_queue_empty(),
-            m_worker_exited() {
+            m_worker_exited(),
+            m_semaphore(0) {
 
         }
 

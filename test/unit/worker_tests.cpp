@@ -15,13 +15,15 @@ SCENARIO("worker can be started and stopped", "[concurrent::worker]") {
         std::condition_variable queue_empty;
         std::condition_variable queue_not_empty;
         std::condition_variable worker_exited;
+        concurrent::semaphore semaphore(0u);
 
         concurrent::worker<decltype(task_queue), concurrent::infinite_waiting_strategy, concurrent::spy_thread> worker(
                 task_queue,
                 queue_mutex,
                 queue_not_empty,
                 queue_empty,
-                worker_exited
+                worker_exited,
+                semaphore
         );
 
         WHEN("nothing else happens") {
@@ -98,13 +100,15 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
         std::condition_variable queue_empty;
         std::condition_variable queue_not_empty;
         std::condition_variable worker_exited;
+        concurrent::semaphore semaphore(0u);
 
         concurrent::worker<decltype(task_queue), concurrent::infinite_waiting_strategy, concurrent::spy_thread> worker(
                 task_queue,
                 queue_mutex,
                 queue_not_empty,
                 queue_empty,
-                worker_exited
+                worker_exited,
+                semaphore
         );
 
         worker.start();

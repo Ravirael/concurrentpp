@@ -12,7 +12,7 @@ SCENARIO("creating priority task queue, adding and executing tasks", "[concurren
     GIVEN("a 4-threaded priority task queue") {
         concurrent::priority_task_queue_extension<
             concurrent::n_threaded_task_queue<
-                    concurrent::unsafe_priority_queue<std::function<void(void)>, int>,
+                    concurrent::unsafe_priority_queue<int, std::function<void(void)>>,
                     concurrent::spy_thread
             >
         > task_queue(4);

@@ -6,7 +6,7 @@
 
 using namespace std::chrono_literals;
 
-const auto sleep_time = 100us;
+const auto sleep_time = 1000us;
 
 unsigned performUsingDynamicTaskQueue(unsigned count) {
     lifetime_logger logger("Using dynamic threaded thread pool: ");

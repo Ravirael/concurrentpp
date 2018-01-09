@@ -9,7 +9,7 @@ namespace {
 }
 
 TEST_CASE("different ways of pushing values priority queue of simple types", "[concurrent::unsafe_priority_queue]") {
-    concurrent::unsafe_priority_queue<int, Priority> queue;
+    concurrent::unsafe_priority_queue<Priority, int> queue;
 
     SECTION("pushing l-value should work") {
         const auto pair = std::make_pair(Priority::normal, 1);
@@ -27,7 +27,7 @@ TEST_CASE("different ways of pushing values priority queue of simple types", "[c
 }
 
 TEST_CASE("different ways of pushing values to priority queue of only move-constructable types", "[concurrent::unsafe_priority_queue]") {
-    concurrent::unsafe_priority_queue<std::unique_ptr<int>, std::unique_ptr<Priority>> queue;
+    concurrent::unsafe_priority_queue<std::unique_ptr<Priority>, std::unique_ptr<int>> queue;
 
     SECTION("emplacing should work") {
         queue.emplace(
@@ -41,7 +41,7 @@ TEST_CASE("different ways of pushing values to priority queue of only move-const
 
 SCENARIO("basic unsafe priority queue operations", "[concurrent::unsafe_priority_queue") {
     GIVEN("unsafe priority queue with ints as priorities and as values") {
-        concurrent::unsafe_priority_queue<int, Priority> queue;
+        concurrent::unsafe_priority_queue<Priority, int> queue;
 
         WHEN("one value is pushed") {
             queue.emplace(Priority::normal, 1);
@@ -83,7 +83,7 @@ SCENARIO("basic unsafe priority queue operations", "[concurrent::unsafe_priority
     }
 
     GIVEN("unsafe priority queue filled with values") {
-        concurrent::unsafe_priority_queue<int, Priority> queue(
+        concurrent::unsafe_priority_queue<Priority, int> queue(
                 {
                     std::make_pair(Priority::normal, 1),
                     std::make_pair(Priority::low, 0),

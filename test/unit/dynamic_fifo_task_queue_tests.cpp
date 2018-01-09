@@ -134,6 +134,26 @@ SCENARIO("creating dynamic queue, adding and executing tasks", "[concurrent::dyn
                 }
             }
         }
+
+        WHEN("16 tasks are added") {
+            auto counter = std::make_shared<std::atomic_uint>(0);
+            for (int i = 0; i < 16; ++i) {
+                task_queue.push(
+                        [counter] {
+                            std::this_thread::sleep_for(1ms);
+                            (*counter)++;
+                        }
+                );
+            }
+
+            AND_WHEN("`wait_for_finishing_tasks` is called") {
+                task_queue.wait_for_finishing_tasks();
+
+                THEN("all task are finished") {
+                    REQUIRE(*counter == 16);
+                }
+            }
+        }
     }
 
 }

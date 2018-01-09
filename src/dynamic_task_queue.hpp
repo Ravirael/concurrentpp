@@ -10,8 +10,8 @@
 #include "timeout_waiting_strategy.hpp"
 
 namespace concurrent {
-    template <class Queue, class Thread, class Duration = std::chrono::milliseconds>
-    class dynamic_task_queue: public task_queue_base<Queue> {
+    template <class Queue, class Thread, class Semaphore = semaphore, class Duration = std::chrono::milliseconds>
+    class dynamic_task_queue: public task_queue_base<Queue, Semaphore> {
     public:
         using queue_type = Queue;
         using pushed_value_type = typename Queue::pushed_value_type;
@@ -46,7 +46,7 @@ namespace concurrent {
                 std::size_t max_queue_length = 1u,
                 queue_type queue = queue_type()
         ):
-                task_queue_base<Queue>(std::move(queue)),
+                task_queue_base<Queue, Semaphore>(std::move(queue)),
                 m_core_workers(),
                 m_dynamic_workers(),
                 m_core_workers_size(core_pool_size),
@@ -94,6 +94,17 @@ namespace concurrent {
             this->m_queue_not_empty.notify_one();
         }
 
+        void wait_for_finishing_tasks() {
+            std::lock_guard<std::mutex> workers_lock(m_dynamic_workers_mutex);
+            std::unique_lock<std::mutex> lock(this->m_queue_mutex);
+            this->m_queue_empty.wait(lock, [this]{ return this->m_task_queue.empty(); });
+            const auto workers_size = this->m_core_workers.size() + this->m_dynamic_workers.size();
+            this->m_semaphore.acquire(workers_size);
+
+            //semaphore was acquired - all task were finished, we need to release it now to allow further execution
+            this->m_semaphore.release(workers_size);
+        }
+
         ~dynamic_task_queue() {
             this->wait_until_is_empty();
 
@@ -120,7 +131,8 @@ namespace concurrent {
                         this->m_queue_mutex,
                         this->m_queue_not_empty,
                         this->m_queue_empty,
-                        this->m_worker_exited
+                        this->m_worker_exited,
+                        this->m_semaphore
                 );
 
                 m_core_workers.back().start();
@@ -140,6 +152,7 @@ namespace concurrent {
                         this->m_queue_not_empty,
                         this->m_queue_empty,
                         this->m_worker_exited,
+                        this->m_semaphore,
                         concurrent::timeout_waiting_strategy<Duration>(
                                 m_timeout
                         )

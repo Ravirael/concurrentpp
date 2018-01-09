@@ -3,13 +3,15 @@
 #include <condition_variable>
 #include <atomic>
 #include <thread>
+#include "semaphore.hpp"
 
 namespace concurrent {
-    template<class Queue, class WaitingStrategy, class Thread = std::thread>
+    template<class Queue, class WaitingStrategy, class Thread = std::thread, class Semaphore = semaphore>
     class worker {
     public:
         using queue_type = Queue;
         using thread_type = Thread;
+        using semaphore_type = Semaphore;
 
     private:
         queue_type &m_task_queue;
@@ -17,6 +19,7 @@ namespace concurrent {
         std::condition_variable &m_queue_not_empty;
         std::condition_variable &m_queue_empty;
         std::condition_variable &m_thread_exited;
+        semaphore_type &m_semaphore;
         WaitingStrategy m_waiting_strategy;
         bool m_stopped{true};
         thread_type m_thread;
@@ -28,6 +31,7 @@ namespace concurrent {
                 std::condition_variable &queue_not_empty,
                 std::condition_variable &queue_empty,
                 std::condition_variable &thread_exited,
+                semaphore_type &sem,
                 WaitingStrategy waiting_strategy = WaitingStrategy()
         ):
                 m_task_queue(task_queue),
@@ -35,8 +39,9 @@ namespace concurrent {
                 m_queue_not_empty(queue_not_empty),
                 m_queue_empty(queue_empty),
                 m_thread_exited(thread_exited),
+                m_semaphore(sem),
                 m_waiting_strategy(std::move(waiting_strategy)) {
-
+            m_semaphore.release();
         }
 
         worker(worker &&other) noexcept:
@@ -45,12 +50,14 @@ namespace concurrent {
             m_queue_not_empty(other.m_queue_not_empty),
             m_queue_empty(other.m_queue_empty),
             m_thread_exited(other.m_thread_exited),
+            m_semaphore(other.m_semaphore),
             m_waiting_strategy(std::move(other.m_waiting_strategy)) {
 
             if (other.running()) {
                 start();
             }
             other.stop();
+            m_semaphore.release();
         }
 
         void start() {
@@ -80,6 +87,8 @@ namespace concurrent {
             if (m_thread.joinable()) {
                 m_thread.join();
             }
+            
+            m_semaphore.acquire();
         }
 
     private:
@@ -101,6 +110,7 @@ namespace concurrent {
                 }
 
                 auto task = m_task_queue.pop();
+                m_semaphore.acquire();
 
                 const bool notify_empty = m_task_queue.empty();
                 lock.unlock();
@@ -110,6 +120,7 @@ namespace concurrent {
                 }
 
                 task();
+                m_semaphore.release();
             }
             m_thread_exited.notify_one();
         }

@@ -9,8 +9,8 @@
 #include "task_queue_base.hpp"
 
 namespace concurrent {
-    template <class Queue, class Thread>
-    class n_threaded_task_queue: public task_queue_base<Queue> {
+    template <class Queue, class Thread, class Semaphore = semaphore>
+    class n_threaded_task_queue: public task_queue_base<Queue, Semaphore> {
     public:
         using queue_type = Queue;
         using pushed_value_type = typename Queue::pushed_value_type;
@@ -25,7 +25,7 @@ namespace concurrent {
                 std::size_t number_of_threads = std::thread::hardware_concurrency(),
                 queue_type queue = queue_type()
         ):
-            task_queue_base<Queue>(std::move(queue)),
+            task_queue_base<Queue, Semaphore>(std::move(queue)),
             m_workers() {
             m_workers.reserve(number_of_threads);
 
@@ -35,7 +35,8 @@ namespace concurrent {
                         this->m_queue_mutex,
                         this->m_queue_not_empty,
                         this->m_queue_empty,
-                        this->m_worker_exited
+                        this->m_worker_exited,
+                        this->m_semaphore
                 );
             }
 
@@ -65,6 +66,16 @@ namespace concurrent {
                 this->m_task_queue.emplace(std::forward<Args>(args)...);
             }
             this->m_queue_not_empty.notify_one();
+        }
+
+        void wait_for_finishing_tasks() {
+            std::unique_lock<std::mutex> lock(this->m_queue_mutex);
+            this->m_queue_empty.wait(lock, [this]{ return this->m_task_queue.empty(); });
+            const auto workers_size = this->m_workers.size();
+            this->m_semaphore.acquire(workers_size);
+            
+            //semaphore was acquired - all task were finished, we need to release it now to allow further execution
+            this->m_semaphore.release(workers_size);
         }
 
         ~n_threaded_task_queue() {
