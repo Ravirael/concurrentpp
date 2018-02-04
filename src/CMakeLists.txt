@@ -6,12 +6,15 @@ set(CMAKE_CXX_STANDARD 14)
 set(
         SOURCE_FILES
         barrier.hpp
+        call_operator_traits.hpp
         dynamic_task_queue.hpp
+        fake_semaphore.hpp
         infinite_waiting_strategy.hpp
         n_threaded_task_queue.hpp
         parallel_for_each.hpp
         priority_task_queue_extension.hpp
         semaphore.hpp
+        semaphore_validator.hpp
         task_queue_base.hpp
         task_queue_extension.hpp
         task_queues.hpp

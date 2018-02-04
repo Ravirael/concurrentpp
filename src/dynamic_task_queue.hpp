@@ -19,12 +19,14 @@ namespace concurrent {
         using worker_type = concurrent::worker<
                 queue_type,
                 concurrent::infinite_waiting_strategy,
-                thread_type
+                thread_type,
+                Semaphore
         >;
         using dynamic_worker_type = concurrent::worker<
                 queue_type,
                 concurrent::timeout_waiting_strategy<Duration>,
-                thread_type
+                thread_type,
+                Semaphore
         >;
 
     private:
@@ -95,6 +97,7 @@ namespace concurrent {
         }
 
         void wait_for_finishing_tasks() {
+            static_assert(!is_semaphore_fake<Semaphore>::value, "Cannot wait for finished task with fake semaphore!");
             std::lock_guard<std::mutex> workers_lock(m_dynamic_workers_mutex);
             std::unique_lock<std::mutex> lock(this->m_queue_mutex);
             this->m_queue_empty.wait(lock, [this]{ return this->m_task_queue.empty(); });

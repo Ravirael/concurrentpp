@@ -3,12 +3,13 @@
 #include <type_traits>
 #include <iterator>
 #include <functional>
+#include "call_operator_traits.hpp"
 
 namespace concurrent {
 
     template <class InputIt, class TaskQueue, class UnaryOperation>
     void parallel_for_each(
-            TaskQueue &taskQueue,
+            TaskQueue &task_queue,
             InputIt begin,
             InputIt end,
             UnaryOperation operation,
@@ -21,9 +22,26 @@ namespace concurrent {
     ) {
         for (; begin != end; ++begin) {
             auto copy(begin);
-            taskQueue.emplace([copy, operation]{ operation(*copy); });
+            task_queue.emplace([copy, operation]{ operation(*copy); });
         }
-        taskQueue.wait_for_finishing_tasks();
+        task_queue.wait_for_finishing_tasks();
+    };
+
+    template <
+            class InputIt,
+            class TaskQueue,
+            class TaskConstructor
+    >
+    void parallel_for_each_construct(
+            TaskQueue &task_queue,
+            InputIt begin,
+            InputIt end,
+            TaskConstructor operation
+    ) {
+        for (; begin != end; ++begin) {
+            task_queue.emplace(operation(*begin));
+        }
+        task_queue.wait_for_finishing_tasks();
     };
 
 //    template <class InputIt, class TaskQueue, class UnaryOperation>

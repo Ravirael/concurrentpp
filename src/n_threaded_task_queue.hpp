@@ -7,6 +7,7 @@
 #include "workers_pool.hpp"
 #include "infinite_waiting_strategy.hpp"
 #include "task_queue_base.hpp"
+#include "semaphore_validator.hpp"
 
 namespace concurrent {
     template <class Queue, class Thread, class Semaphore = semaphore>
@@ -15,7 +16,12 @@ namespace concurrent {
         using queue_type = Queue;
         using pushed_value_type = typename Queue::pushed_value_type;
         using thread_type = Thread;
-        using worker_type = concurrent::worker<queue_type, concurrent::infinite_waiting_strategy, thread_type>;
+        using worker_type = concurrent::worker<
+                queue_type,
+                concurrent::infinite_waiting_strategy,
+                thread_type,
+                Semaphore
+        >;
 
     private:
         concurrent::workers_vector<worker_type> m_workers;
@@ -69,6 +75,7 @@ namespace concurrent {
         }
 
         void wait_for_finishing_tasks() {
+            static_assert(!is_semaphore_fake<Semaphore>::value, "Cannot wait for finished task with fake semaphore!");
             std::unique_lock<std::mutex> lock(this->m_queue_mutex);
             this->m_queue_empty.wait(lock, [this]{ return this->m_task_queue.empty(); });
             const auto workers_size = this->m_workers.size();

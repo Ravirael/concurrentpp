@@ -53,11 +53,15 @@ namespace concurrent {
             m_semaphore(other.m_semaphore),
             m_waiting_strategy(std::move(other.m_waiting_strategy)) {
 
-            if (other.running()) {
-                start();
+            try {
+                if (other.running()) {
+                    start();
+                }
+                other.stop();
+                m_semaphore.release();
+            } catch (...) {
+                // ¯\_(ツ)_/¯
             }
-            other.stop();
-            m_semaphore.release();
         }
 
         void start() {
