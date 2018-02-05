@@ -91,7 +91,7 @@ before_install:
   - chmod +x cmake-3.9.1-Linux-x86_64.sh
   - ./cmake-3.9.1-Linux-x86_64.sh --prefix=$HOME/usr --exclude-subdir --skip-license
   - cmake --version
-  - wget --output-file=/usr/local/include/catch.hpp https://github.com/catchorg/Catch2/releases/download/v2.1.1/catch.hpp
+  - sudo wget --output-file=/usr/local/include/catch.hpp https://github.com/catchorg/Catch2/releases/download/v2.1.1/catch.hpp
 
 install:
   - eval "${MATRIX_EVAL}"
