@@ -24,7 +24,7 @@ namespace concurrent {
             auto copy(begin);
             task_queue.emplace([copy, operation]{ operation(*copy); });
         }
-        task_queue.wait_for_finishing_tasks();
+        task_queue.wait_for_tasks_completion();
     };
 
     template <
@@ -41,7 +41,7 @@ namespace concurrent {
         for (; begin != end; ++begin) {
             task_queue.emplace(operation(*begin));
         }
-        task_queue.wait_for_finishing_tasks();
+        task_queue.wait_for_tasks_completion();
     };
 
 //    template <class InputIt, class TaskQueue, class UnaryOperation>
@@ -60,7 +60,7 @@ namespace concurrent {
 //        for (; begin != end; ++begin) {
 //            taskQueue.emplace(operation(*begin));
 //        }
-//        taskQueue.wait_for_finishing_tasks();
+//        taskQueue.wait_for_tasks_completion();
 //    };
 
 }

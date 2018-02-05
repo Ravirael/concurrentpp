@@ -74,7 +74,7 @@ namespace concurrent {
             this->m_queue_not_empty.notify_one();
         }
 
-        void wait_for_finishing_tasks() {
+        void wait_for_tasks_completion() {
             static_assert(!is_semaphore_fake<Semaphore>::value, "Cannot wait for finished task with fake semaphore!");
             std::unique_lock<std::mutex> lock(this->m_queue_mutex);
             this->m_queue_empty.wait(lock, [this]{ return this->m_task_queue.empty(); });
