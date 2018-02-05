@@ -10,6 +10,21 @@ What it provides:
 * synchronization barrier
 * semaphore
 
+
+## Build statuses
+
+### Linux gcc 4.9+
+
+| gcc 4.9 | gcc 5 | gcc 6 | gcc 7 |
+| ------- | ----- | ----- | ----- |
+| [![Build Status](https://travis-matrix-badges.herokuapp.com/repos/Ravirael/concurrentpp/branches/master/4)](https://travis-ci.org/Ravirael/concurrentpp) | [![Build Status](https://travis-matrix-badges.herokuapp.com/repos/Ravirael/concurrentpp/branches/master/1)](https://travis-ci.org/Ravirael/concurrentpp) | [![Build Status](https://travis-matrix-badges.herokuapp.com/repos/Ravirael/concurrentpp/branches/master/2)](https://travis-ci.org/Ravirael/concurrentpp) | [![Build Status](https://travis-matrix-badges.herokuapp.com/repos/Ravirael/concurrentpp/branches/master/3)](https://travis-ci.org/Ravirael/concurrentpp)
+
+### Linux clang 3.9+
+
+| clang 3.9 | clang 4 | clang 5 |
+| --------- | ------- | ------- |
+| [![Build Status](https://travis-matrix-badges.herokuapp.com/repos/Ravirael/concurrentpp/branches/master/5)](https://travis-ci.org/Ravirael/concurrentpp) | [![Build Status](https://travis-matrix-badges.herokuapp.com/repos/Ravirael/concurrentpp/branches/master/6)](https://travis-ci.org/Ravirael/concurrentpp) | [![Build Status](https://travis-matrix-badges.herokuapp.com/repos/Ravirael/concurrentpp/branches/master/7)](https://travis-ci.org/Ravirael/concurrentpp) |
+
 ## Installation
 
 The library contains of multiple header files. Add contents of `src`
