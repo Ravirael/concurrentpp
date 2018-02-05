@@ -78,8 +78,7 @@ SCENARIO("creating task queue, adding and executing tasks", "[concurrent::n_thre
         }
 
         WHEN("task with result is pushed") {
-            std::function<int()> foo = []{return 4;};
-            auto result = task_queue.push_with_result(foo);
+            auto result = task_queue.push_with_result([]{return 4;});
 
             THEN("task should finally be executed") {
                 REQUIRE(result.get() == 4);
@@ -153,8 +152,8 @@ SCENARIO("creating task queue, adding and executing tasks", "[concurrent::n_thre
                 );
             }
 
-            AND_WHEN("`wait_for_finishing_tasks` is called") {
-                task_queue.wait_for_finishing_tasks();
+            AND_WHEN("`wait_for_tasks_completion` is called") {
+                task_queue.wait_for_tasks_completion();
 
                 THEN("all task are finished") {
                     REQUIRE(*counter == 16);

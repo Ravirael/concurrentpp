@@ -146,8 +146,8 @@ SCENARIO("creating dynamic queue, adding and executing tasks", "[concurrent::dyn
                 );
             }
 
-            AND_WHEN("`wait_for_finishing_tasks` is called") {
-                task_queue.wait_for_finishing_tasks();
+            AND_WHEN("`wait_for_tasks_completion` is called") {
+                task_queue.wait_for_tasks_completion();
 
                 THEN("all task are finished") {
                     REQUIRE(*counter == 16);
