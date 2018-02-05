@@ -36,7 +36,7 @@ Dynamic task queues types:
 
 Using fifo and lifo queues:
 
-```
+```C++
     #include <task_queues.hpp>
     #include <iostream>
 
@@ -62,7 +62,7 @@ but avoid destroying task queue. For this use `wait_for_tasks_completion`
 method.
 
 
-```
+```C++
     #include <task_queues.hpp>
     #include <iostream>
 
@@ -84,7 +84,7 @@ method.
 Getting a return value from task is also possible. The `std::future`
 class is used to represent the result of future computations.
 
-```
+```C++
     #include <task_queues.hpp>
     #include <iostream>
 
@@ -109,7 +109,7 @@ queues but all tasks are required to have priority. Tasks with greater
 priority are taken from queue by worker threads before tasks with
 lesser priority.
 
-```
+```C++
     #include <task_queues.hpp>
     #include <iostream>
 
