@@ -57,7 +57,7 @@ Using fifo and lifo queues:
 
     int main() {
         // Declare a queue which uses 4-threaded thread pool
-        n_threaded_fifo_task_queue queue(4);
+        concurrent::n_threaded_fifo_task_queue queue(4);
 
         // Add task to queue using push method.
         // You can push everything convertible
@@ -82,7 +82,7 @@ method.
     #include <iostream>
 
     int main() {
-        n_threaded_fifo_task_queue queue(4);
+        concurrent::n_threaded_fifo_task_queue queue(4);
 
         // Add tasks to queue.
         queue.push([] { /* a task */ });
@@ -104,7 +104,7 @@ class is used to represent the result of future computations.
     #include <iostream>
 
     int main() {
-        n_threaded_fifo_task_queue queue(4);
+        concurrent::n_threaded_fifo_task_queue queue(4);
 
         // Add tasks to queue and wait for result.
         std::future<int> future_result = queue.push_with_result([] { return 4; });
@@ -129,7 +129,7 @@ lesser priority.
     #include <iostream>
 
     int main() {
-        n_threaded_priority_task_queue queue(4);
+        concurrent::n_threaded_priority_task_queue queue(4);
 
         // Use emplace method to add task with priority to queue.
         task_queue.emplace(
@@ -142,4 +142,33 @@ lesser priority.
         // You can also push a pair of priority and task.
         task_queue.push(std::make_pair(0, []{/* Do something. */}));
     }
+```
+
+### Parallel for each
+
+```C++
+#include <task_queues.hpp>
+#include <parallel_for_each.hpp>
+#include <iostream>
+
+int main() {
+	std::vector<double> values = {1, 2, 3, 4, 5, 6, 7, 8};
+	concurrent::n_threaded_fifo_task_queue task_queue(4);
+
+	concurrent::parallel_for_each(
+		task_queue,
+		values.begin(),
+		values.end(),
+		[] (double &value) {
+			value *= value;
+		}
+	);
+
+	// Expected output: 1 4 9 16 25 36 49 64
+	for (auto value: values) {
+		std::cout << value << " ";
+	}
+
+	std::cout << std::endl;
+}
 ```
