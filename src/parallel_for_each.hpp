@@ -42,7 +42,7 @@ namespace concurrent {
             task_queue.emplace(operation(*begin));
         }
         task_queue.wait_for_tasks_completion();
-    };
+    }
 
 //    template <class InputIt, class TaskQueue, class UnaryOperation>
 //    void parallel_for_each(
