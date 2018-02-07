@@ -25,7 +25,7 @@ namespace concurrent {
             task_queue.emplace([copy, operation]{ operation(*copy); });
         }
         task_queue.wait_for_tasks_completion();
-    };
+    }
 
     template <
             class InputIt,

@@ -109,8 +109,8 @@ before_script:
 
 script:
   - cd build_debug
-  - make all
+  - make thread_pool_tests
   - ./test/thread_pool_tests
   - cd ../build_release
-  - make all
+  - make thread_pool_tests
   - ./test/thread_pool_tests
