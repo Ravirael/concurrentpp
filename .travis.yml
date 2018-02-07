@@ -98,10 +98,19 @@ install:
   - export CPLUS_INCLUDE_PATH=/usr/local/include
 
 before_script:
-  - mkdir build
-  - cd build
+  - mkdir build_debug
+  - cd build_debug
+  - cmake -DCMAKE_CXX_COMPILER=$COMPILER -DCMAKE_BUILD_TYPE=Debug ..
+  - cd ..
+  - mkdir build_release
+  - cd build_release
   - cmake -DCMAKE_CXX_COMPILER=$COMPILER -DCMAKE_BUILD_TYPE=Release ..
+  - cd ..
 
 script:
+  - cd build_debug
+  - make all
+  - ./test/thread_pool_tests
+  - cd ../build_release
   - make all
   - ./test/thread_pool_tests
