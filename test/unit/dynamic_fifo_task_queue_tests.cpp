@@ -16,7 +16,7 @@ SCENARIO("creating dynamic queue, adding and executing tasks", "[concurrent::dyn
         > task_queue(
                 4,
                 8,
-                std::chrono::milliseconds(10)
+                std::chrono::milliseconds(3)
         );
 
         WHEN("nothing else happens") {
@@ -128,7 +128,7 @@ SCENARIO("creating dynamic queue, adding and executing tasks", "[concurrent::dyn
 
                     AND_WHEN("we wait longer than timeout") {
                         std::this_thread::sleep_for(std::chrono::milliseconds(30));
-                        THEN("dynamic threads are killed") {
+                        THEN("dynamic threads are finally killed") {
                             std::lock_guard<std::mutex> lock(concurrent::spy_thread::alive_threads_mutex);
                             REQUIRE(concurrent::spy_thread::alive_threads.size() == 5);
                         }
