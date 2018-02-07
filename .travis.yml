@@ -11,6 +11,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
+            - libtsan0
       env:
          - MATRIX_EVAL="export CC=gcc-5 CXX=g++-5"
 
@@ -22,6 +23,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-6
+            - libtsan0
       env:
         - MATRIX_EVAL="export CC=gcc-6 CXX=g++-6"
 
@@ -33,6 +35,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
+            - libtsan0
       env:
         - MATRIX_EVAL="export CC=gcc-7 CXX=g++-7"
 
@@ -44,6 +47,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
+            - libtsan0
       env:
          - MATRIX_EVAL="export CC=gcc-4.9 CXX=g++-4.9"
 
@@ -55,6 +59,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
+            - libtsan0
       env:
         - MATRIX_EVAL="export CC=clang CXX=clang++"
 
@@ -68,6 +73,7 @@ matrix:
           packages:
             - clang-4.0
             - g++-4.9
+            - libtsan0
       env:
         - MATRIX_EVAL="export CC=clang-4.0 CXX=clang++-4.0"
 
@@ -81,6 +87,7 @@ matrix:
           packages:
             - clang-5.0
             - g++-4.9
+            - libtsan0
       env:
         - MATRIX_EVAL="export CC=clang-5.0 CXX=clang++-5.0"
 
