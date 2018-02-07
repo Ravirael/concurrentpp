@@ -4,9 +4,10 @@ project(thread_pool_tests)
 set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -std=c++14")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -ggdb -O0 -fsanitize=thread")
-set(CMAKE_CXX_FLAGS_RELSANITIZE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -fsanitize=thread")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -ggdb -O0 -fsanitize=thread")
+set(CMAKE_CXX_FLAGS_RELSANITIZE "${CMAKE_CXX_FLAGS} -O3 -fsanitize=thread")
+set(CMAKE_CXX_FLAGS_DEBUGNOSANITIZE "${CMAKE_CXX_FLAGS} -ggdb -O0")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
 
 
 

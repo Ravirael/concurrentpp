@@ -124,6 +124,8 @@ SCENARIO("creating dynamic queue, adding and executing tasks", "[concurrent::dyn
                     REQUIRE(second_barrier->wait_for(config::default_timeout));
                     REQUIRE(first_barrier->wait_for(config::default_timeout));
 
+                    task_queue.wait_for_tasks_completion();
+
                     AND_WHEN("we wait longer than timeout") {
                         std::this_thread::sleep_for(std::chrono::milliseconds(30));
                         THEN("dynamic threads are killed") {
