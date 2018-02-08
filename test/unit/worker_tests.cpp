@@ -78,17 +78,9 @@ SCENARIO("worker can be started and stopped", "[concurrent::worker]") {
             }
         }
 
-        WHEN("worker is moved after start") {
-            worker.start();
-            auto other_worker(std::move(worker));
-
-            THEN("original worker shouldn't be running") {
-                REQUIRE_FALSE(worker.running());
-            }
-
-            THEN("other worker should be running") {
-                REQUIRE(other_worker.running());
-            }
+        if (worker.running()) {
+            worker.stop();
+            queue_not_empty.notify_one();
         }
     }
 }
@@ -183,6 +175,11 @@ SCENARIO("a started worker should execute tasks", "[concurrent::worker]") {
                     REQUIRE_FALSE(barrier->wait_for(std::chrono::milliseconds(100)));
                 }
             }
+        }
+
+        if (worker.running()) {
+            worker.stop();
+            queue_not_empty.notify_one();
         }
     }
 }

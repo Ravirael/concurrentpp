@@ -81,7 +81,7 @@ namespace concurrent {
 
         void remove_stopped() {
             for (auto it = begin(); it != end(); ++it) {
-                if (!it->running()) {
+                if (!it->nonblocking_running()) {
                     it = m_container.erase(it);
                 }
             }
@@ -93,7 +93,7 @@ namespace concurrent {
                     end(),
                     0u,
                     [](std::size_t acc, const worker_type &worker) {
-                        return acc + !worker.running();
+                        return acc + !worker.nonblocking_running();
                     }
             );
         }

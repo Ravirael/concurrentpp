@@ -76,18 +76,16 @@ namespace concurrent {
             return !m_stopped;
         }
 
+        bool nonblocking_running() const {
+            return !m_stopped;
+        }
+
         void stop() {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_stopped = true;
         }
 
         ~worker() {
-            // fallback stopping, usually should be stopped before destructor
-            if (running()) {
-                stop();
-                m_queue_not_empty.notify_all();
-            }
-
             if (m_thread.joinable()) {
                 m_thread.join();
             }

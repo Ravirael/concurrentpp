@@ -30,7 +30,6 @@ namespace concurrent {
         >;
 
     private:
-        std::mutex m_dynamic_workers_mutex;
         concurrent::workers_list<worker_type> m_core_workers;
         concurrent::workers_list<dynamic_worker_type> m_dynamic_workers;
         const std::size_t m_core_workers_size;
@@ -61,7 +60,6 @@ namespace concurrent {
 
         void push(const pushed_value_type &element) {
             {
-                std::lock_guard<std::mutex> workers_lock(m_dynamic_workers_mutex);
                 std::lock_guard<std::mutex> lock(this->m_queue_mutex);
                 this->m_task_queue.push(element);
                 if (!conditionally_increase_core_workers_size()) {
@@ -73,7 +71,6 @@ namespace concurrent {
 
         void push(pushed_value_type &&element) {
             {
-                std::lock_guard<std::mutex> workers_lock(m_dynamic_workers_mutex);
                 std::lock_guard<std::mutex> lock(this->m_queue_mutex);
                 this->m_task_queue.push(std::move(element));
                 if (!conditionally_increase_core_workers_size()) {
@@ -86,7 +83,6 @@ namespace concurrent {
         template< class... Args >
         void emplace( Args&&... args ) {
             {
-                std::lock_guard<std::mutex> workers_lock(m_dynamic_workers_mutex);
                 std::lock_guard<std::mutex> lock(this->m_queue_mutex);
                 this->m_task_queue.emplace(std::forward<Args>(args)...);
                 if (!conditionally_increase_core_workers_size()) {
@@ -98,7 +94,6 @@ namespace concurrent {
 
         void wait_for_tasks_completion() {
             static_assert(!is_semaphore_fake<Semaphore>::value, "Cannot wait for finished task with fake semaphore!");
-            std::lock_guard<std::mutex> workers_lock(m_dynamic_workers_mutex);
             std::unique_lock<std::mutex> lock(this->m_queue_mutex);
             this->m_queue_empty.wait(lock, [this]{ return this->m_task_queue.empty(); });
             const auto workers_size = this->m_core_workers.size() + this->m_dynamic_workers.size();
@@ -113,7 +108,7 @@ namespace concurrent {
 
             // to close cleaning thread
             {
-                std::lock_guard<std::mutex> lock(m_dynamic_workers_mutex);
+                std::lock_guard<std::mutex> lock(this->m_queue_mutex);
                 m_stop_cleaning = true;
             }
             this->m_worker_exited.notify_one();
@@ -169,7 +164,7 @@ namespace concurrent {
 
         void cleaning_thread() {
             while (true) {
-                std::unique_lock<std::mutex> lock(m_dynamic_workers_mutex);
+                std::unique_lock<std::mutex> lock(this->m_queue_mutex);
                 this->m_worker_exited.wait(
                         lock,
                         [this] { return m_dynamic_workers.stopped_count() > 0u || m_stop_cleaning; }
