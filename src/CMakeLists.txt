@@ -15,6 +15,7 @@ set(
         priority_task_queue_extension.hpp
         semaphore.hpp
         semaphore_validator.hpp
+        task_queue.hpp
         task_queue_base.hpp
         task_queue_extension.hpp
         task_queues.hpp

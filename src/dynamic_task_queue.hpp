@@ -69,7 +69,7 @@ namespace concurrent {
             this->m_queue_not_empty.notify_one();
         }
 
-        void push(pushed_value_type &&element) {
+        void push(pushed_value_type &&element) override {
             {
                 std::lock_guard<std::mutex> lock(this->m_queue_mutex);
                 this->m_task_queue.push(std::move(element));
